@@ -10,8 +10,11 @@ using LinearAlgebra
 
 
 
-# Need a better way to get this
-const AFTR = Base.get_extension(Reactant, :ReactantAbstractFFTsExt)
+function _get_aftr()
+    ext = Base.get_extension(Reactant, :ReactantAbstractFFTsExt)
+    ext === nothing && error("ReactantAbstractFFTsExt not loaded. Make sure AbstractFFTs is loaded before VLBISkyModels.")
+    return ext
+end
 
 struct ReactantNFFTPlan{T, D, K <: AbstractArray, arrTc, vecI, vecII, FP, BP, INV, SM} <:
     AbstractNFFTPlan{T, D, 1}
@@ -88,8 +91,8 @@ function ReactantNFFTPlan(
 
     FP0 = plan_fft!(zeros(ComplexF64, 2,2))
     BP0 = plan_bfft!(zeros(ComplexF64, 2,2))
-    FP = AFTR.reactant_fftplan(AFTR.reactant_fftplan_type(typeof(FP0)), FP0)
-    BP = AFTR.reactant_fftplan(AFTR.reactant_fftplan_type(typeof(BP0)), BP0)
+    FP = _get_aftr().reactant_fftplan(_get_aftr().reactant_fftplan_type(typeof(FP0)), FP0)
+    BP = _get_aftr().reactant_fftplan(_get_aftr().reactant_fftplan_type(typeof(BP0)), BP0)
 
     params.storeDeconvolutionIdx = true # GPU_NFFT only works this way
     params.precompute = NFFT.FULL # GPU_NFFT only works this way
